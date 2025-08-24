@@ -5,3 +5,4 @@ export * from './config';
 export { default as apiClient } from './config';
 export { notificationService } from './notificationService';
 export { organizationService } from './organizationService';
+export { visitorLogService } from './visitorLogService';
