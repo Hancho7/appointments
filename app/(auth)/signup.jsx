@@ -7,8 +7,6 @@ import {
   Banner,
   Button,
   Card,
-  Divider,
-  Menu,
   Text,
   TextInput,
   useTheme
@@ -18,29 +16,6 @@ import * as Yup from 'yup';
 import { authService } from '../../src/api/authService';
 import { clearSignupState, signupFailure, signupStart, signupSuccess } from '../../src/store/slices/auth/signupSlice';
 
-// Country codes data - you can expand this list
-const COUNTRY_CODES = [
-  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸', format: '(###) ###-####' },
-  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧', format: '#### ### ####' },
-  { code: 'CA', name: 'Canada', dialCode: '+1', flag: '🇨🇦', format: '(###) ###-####' },
-  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺', format: '#### ### ###' },
-  { code: 'GH', name: 'Ghana', dialCode: '+233', flag: '🇬🇭', format: '### ### ####' },
-  { code: 'NG', name: 'Nigeria', dialCode: '+234', flag: '🇳🇬', format: '### ### ####' },
-  { code: 'KE', name: 'Kenya', dialCode: '+254', flag: '🇰🇪', format: '### ### ###' },
-  { code: 'ZA', name: 'South Africa', dialCode: '+27', flag: '🇿🇦', format: '## ### ####' },
-  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳', format: '##### #####' },
-  { code: 'DE', name: 'Germany', dialCode: '+49', flag: '🇩🇪', format: '#### #######' },
-  { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷', format: '# ## ## ## ##' },
-  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵', format: '##-####-####' },
-  { code: 'CN', name: 'China', dialCode: '+86', flag: '🇨🇳', format: '### #### ####' },
-  { code: 'BR', name: 'Brazil', dialCode: '+55', flag: '🇧🇷', format: '## #####-####' },
-  { code: 'MX', name: 'Mexico', dialCode: '+52', flag: '🇲🇽', format: '## #### ####' },
-  { code: 'AE', name: 'UAE', dialCode: '+971', flag: '🇦🇪', format: '## ### ####' },
-  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬', format: '#### ####' },
-  { code: 'MY', name: 'Malaysia', dialCode: '+60', flag: '🇲🇾', format: '##-### ####' },
-  { code: 'TH', name: 'Thailand', dialCode: '+66', flag: '🇹🇭', format: '##-###-####' },
-  { code: 'PH', name: 'Philippines', dialCode: '+63', flag: '🇵🇭', format: '#### ### ####' },
-];
 
 // More flexible phone validation
 const validationSchema = Yup.object().shape({
@@ -69,47 +44,21 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { isLoading, error, signUpSuccess } = useSelector((state) => state.signup);
   
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]); // Default to US
-  const [countryMenuVisible, setCountryMenuVisible] = useState(false);
+  // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const formatPhoneNumber = (value, country) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Apply country-specific formatting
-    const format = country.format;
-    let formatted = '';
-    let digitIndex = 0;
-    
-    for (let i = 0; i < format.length && digitIndex < digits.length; i++) {
-      if (format[i] === '#') {
-        formatted += digits[digitIndex];
-        digitIndex++;
-      } else if (digitIndex > 0) {
-        formatted += format[i];
-      }
-    }
-    
-    return formatted;
-  };
-
-  const getFullPhoneNumber = (phoneNumber, country) => {
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
-    return `${country.dialCode}${cleanNumber}`;
-  };
 
   const handleSubmit = async (values) => {
     dispatch(signupStart());
     
     try {
-      // Format the phone number with country code
-      const fullPhoneNumber = getFullPhoneNumber(values.phone, selectedCountry);
       
       // Register with backend
       const response = await authService.register({
         name: values.name,
         email: values.email,
-        phone: fullPhoneNumber,
+        phone: values.phone,
         password: values.password,
       });
       
@@ -164,43 +113,6 @@ export default function SignUpScreen() {
     dispatch(clearSignupState());
   };
 
-  const CountrySelector = ({ onSelect, selectedCountry }) => (
-    <Menu
-      visible={countryMenuVisible}
-      onDismiss={() => setCountryMenuVisible(false)}
-      anchor={
-        <Button
-          mode="outlined"
-          onPress={() => setCountryMenuVisible(true)}
-          style={styles.countrySelector}
-          contentStyle={styles.countrySelectorContent}
-          labelStyle={styles.countrySelectorLabel}
-        >
-          {selectedCountry.flag} {selectedCountry.dialCode}
-        </Button>
-      }
-      contentStyle={styles.countryMenu}
-    >
-      <ScrollView style={styles.countryMenuScroll}>
-        {COUNTRY_CODES.map((country) => (
-          <View key={country.code}>
-            <Menu.Item
-              onPress={() => {
-                onSelect(country);
-                setCountryMenuVisible(false);
-              }}
-              title={`${country.flag} ${country.name}`}
-              leadingIcon={() => (
-                <Text style={styles.dialCode}>{country.dialCode}</Text>
-              )}
-              style={selectedCountry.code === country.code ? styles.selectedCountryItem : null}
-            />
-            <Divider />
-          </View>
-        ))}
-      </ScrollView>
-    </Menu>
-  );
 
   return (
     <KeyboardAvoidingView
@@ -306,39 +218,23 @@ export default function SignUpScreen() {
                     </Text>
                   )}
 
-                  {/* Phone Number with Country Selector */}
-                  <Text variant="bodyMedium" style={[styles.phoneLabel, { color: theme.colors.onSurface }]}>
-                    Phone Number *
-                  </Text>
-                  <View style={styles.phoneContainer}>
-                    <CountrySelector 
-                      onSelect={setSelectedCountry}
-                      selectedCountry={selectedCountry}
-                    />
+                  
                     <TextInput
                       label="Phone Number"
                       value={values.phone}
-                      onChangeText={(text) => {
-                        const formatted = formatPhoneNumber(text, selectedCountry);
-                        setFieldValue('phone', formatted);
-                      }}
+                      onChangeText={handleChange('phone')}
                       onBlur={handleBlur('phone')}
                       error={touched.phone && errors.phone}
-                      style={styles.phoneInput}
+                      style={styles.input}
                       mode="outlined"
                       keyboardType="phone-pad"
                       disabled={isLoading}
-                      placeholder={selectedCountry.format.replace(/#/g, '0')}
                     />
-                  </View>
                   {touched.phone && errors.phone && (
                     <Text variant="bodyMedium" style={[styles.error, { color: theme.colors.error }]}>
                       {errors.phone}
                     </Text>
                   )}
-                  <Text variant="bodySmall" style={[styles.phonePreview, { color: theme.colors.onSurfaceVariant }]}>
-                    Full number: {getFullPhoneNumber(values.phone || '', selectedCountry)}
-                  </Text>
 
                   <TextInput
                     label="Password *"
@@ -348,7 +244,14 @@ export default function SignUpScreen() {
                     error={touched.password && errors.password}
                     style={styles.input}
                     mode="outlined"
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
+                    right={
+                      <TextInput.Icon 
+                        icon={showPassword ? "eye-off" : "eye"} 
+                        onPress={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
+                      />
+                    }
                     disabled={isLoading}
                   />
                   {touched.password && errors.password && (
@@ -365,7 +268,14 @@ export default function SignUpScreen() {
                     error={touched.confirmPassword && errors.confirmPassword}
                     style={styles.input}
                     mode="outlined"
-                    secureTextEntry
+                    secureTextEntry={!showConfirmPassword}
+                    right={
+                      <TextInput.Icon 
+                        icon={showConfirmPassword ? "eye-off" : "eye"} 
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={isLoading}
+                      />
+                    }
                     disabled={isLoading}
                   />
                   {touched.confirmPassword && errors.confirmPassword && (

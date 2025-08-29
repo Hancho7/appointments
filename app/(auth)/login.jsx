@@ -34,6 +34,9 @@ export default function LoginScreen() {
   const theme = useTheme();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (values) => {
     setIsLoading(true);
@@ -71,7 +74,7 @@ export default function LoginScreen() {
       console.error("Login failed:", error);
       dispatch(loginFailure(error.message));
 
-      Alert.alert("Login Failed", errorMessage);
+      Alert.alert("Login Failed", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +95,7 @@ export default function LoginScreen() {
               variant="titleLarge"
               style={[styles.title, { color: theme.colors.onSurface }]}
             >
-              Welcome Back
+              Welcome
             </Text>
             <Text
               variant="bodyMedium"
@@ -146,7 +149,14 @@ export default function LoginScreen() {
                     error={touched.password && errors.password}
                     style={styles.input}
                     mode="outlined"
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
+                    right={
+                      <TextInput.Icon 
+                        icon={showPassword ? "eye-off" : "eye"} 
+                        onPress={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
+                      />
+                    }
                   />
                   {touched.password && errors.password && (
                     <Text

@@ -1,13 +1,25 @@
 // app/(tabs)/_layout.jsx
 import { Tabs } from 'expo-router';
+import { useTheme } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function TabLayout() {
+  const theme = useTheme();
+  
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366f1',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.outline,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
       }}
     >
       <Tabs.Screen
@@ -20,7 +32,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="visit-entry" // Add this tab
+        name="visit-entry"
         options={{
           title: 'New Visit',
           tabBarIcon: ({ color, size }) => (

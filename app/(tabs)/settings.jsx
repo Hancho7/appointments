@@ -64,6 +64,7 @@ export default function SettingsScreen() {
       ]
     );
   };
+  console.log("LOGO", currentOrganization.data.logo)
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -73,17 +74,17 @@ export default function SettingsScreen() {
           <View style={styles.profileSection}>
             <Avatar.Image 
               size={80} 
-              source={{ uri: user?.profilePicture || 'https://via.placeholder.com/80' }}
+              source={{ uri: user?.data?.profilePicture || 'https://via.placeholder.com/80' }}
             />
             <View style={styles.profileInfo}>
               <Text variant="titleLarge"  style={{ color: theme.colors.onSurface }}>
-                {user?.name || 'User'}
+                {user?.data?.name || 'User'}
               </Text>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {user?.email || 'No email'}
+                {user?.data?.email || 'No email'}
               </Text>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {user?.role?.toUpperCase() || 'USER'} • {currentOrganization?.name || 'No Organization'}
+                {user?.data?.role.toUpperCase() || 'USER'} • {currentOrganization?.data.name || 'No Organization'}
               </Text>
             </View>
           </View>
@@ -108,14 +109,14 @@ export default function SettingsScreen() {
             <View style={styles.orgSection}>
               <Avatar.Image 
                 size={50} 
-                source={{ uri: currentOrganization.logo || 'https://via.placeholder.com/50' }}
+                source={{ uri: currentOrganization?.data.logo || 'https://via.placeholder.com/50' }}
               />
               <View style={styles.orgInfo}>
                 <Text variant="titleLarge"  style={{ color: theme.colors.onSurface, fontSize: 16 }}>
-                  {currentOrganization.name}
+                  {currentOrganization?.data.name}
                 </Text>
                 <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Code: {currentOrganization.code}
+                  Code: {currentOrganization?.data.code}
                 </Text>
               </View>
             </View>

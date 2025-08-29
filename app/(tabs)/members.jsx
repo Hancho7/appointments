@@ -152,17 +152,17 @@ export default function MembersScreen() {
   };
 
   const getRoleColor = (role) => {
-    switch (role) {
-      case "admin":
-        return theme.colors.error;
-      case "frontdesk":
-        return theme.colors.primary;
-      case "employee":
-        return theme.colors.secondary;
-      default:
-        return theme.colors.tertiary;
-    }
-  };
+  switch (role) {
+    case "admin":
+      return theme.colors.onSurface; // Darkest
+    case "frontdesk":
+      return theme.colors.onSurfaceVariant; // Medium
+    case "employee":
+      return theme.colors.outline; // Lighter
+    default:
+      return theme.colors.outlineVariant; // Lightest
+  }
+};
 
   const handleShare = async () => {
     if (!currentOrganization?.data?.code) {

@@ -2,12 +2,10 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Formik } from 'formik';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-    ActivityIndicator,
     Button,
     Card,
-    Menu,
     Searchbar,
     SegmentedButtons,
     Text,
@@ -20,6 +18,7 @@ import * as Yup from 'yup';
 import { appointmentService } from '../../src/api/appointmentService';
 import { organizationService } from '../../src/api/organizationService';
 import { visitorLogService } from '../../src/api/visitorLogService';
+import VisitEntrySkeleton from '../../src/components/VisitEntrySkeleton';
 
 // Validation schemas
 const appointmentValidationSchema = Yup.object().shape({
@@ -68,10 +67,14 @@ export default function VisitEntryScreen() {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [visitorStatus, setVisitorStatus] = useState(null);
 
+    // Add loading state
+      const [isLoadingScreen, setIsLoadingScreen] = useState(true);
+
     // Fetch organization members on component mount
     useEffect(() => {
         fetchOrganizationMembers();
     }, []);
+    
 
     const fetchOrganizationMembers = async () => {
         try {
@@ -79,6 +82,7 @@ export default function VisitEntryScreen() {
             setError(null);
             
             const response = await organizationService.getOrganizationMembers();
+            console.log('Organization members response:', response);
             
             if (response.success) {
                 setMembers(response.data || []);
@@ -90,15 +94,19 @@ export default function VisitEntryScreen() {
             setError(error.message);
         } finally {
             setMembersLoading(false);
+            setIsLoadingScreen(false);
         }
     };
 
+    console.log('All members:', members);
     // Filter employees and admins
     const employees = Array.isArray(members) 
         ? members.filter(member => 
             member?.role === 'EMPLOYEE' || member?.role === 'ADMIN'
           )
         : [];
+
+        console.log('Filtered employees:', employees);
 
     const formatDateTime = (date) => {
         return date.toLocaleString('en-US', {
@@ -312,16 +320,9 @@ export default function VisitEntryScreen() {
 
     // Show loading indicator if data is being fetched
     if (membersLoading) {
-        return (
-            <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={{ marginTop: 16, color: theme.colors.onSurface }}>
-                    Loading organization members...
-                </Text>
-            </View>
-        );
-    }
+        return <VisitEntrySkeleton  />};
 
+    
     return (
         <ScrollView 
             style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -444,16 +445,32 @@ export default function VisitEntryScreen() {
                                         </Text>
                                     )}
 
-                                    <TextInput
-                                        label="Preferred Date & Time *"
-                                        value={formatDateTime(selectedDateTime)}
-                                        onFocus={() => setShowDatePicker(true)}
-                                        error={touched.preferredTime && errors.preferredTime}
-                                        style={styles.input}
-                                        mode="outlined"
-                                        editable={false}
-                                        right={<TextInput.Icon icon="calendar" />}
-                                    />
+                                   
+<TextInput
+    label="Preferred Date & Time *"
+    value={formatDateTime(selectedDateTime)}
+    onTouchStart={() => {
+        console.log('DateTime picker touched');
+        setShowDatePicker(true);
+    }}
+    onFocus={() => {
+        console.log('DateTime picker focused');
+        setShowDatePicker(true);
+    }}
+    error={touched.preferredTime && errors.preferredTime}
+    style={styles.input}
+    mode="outlined"
+    editable={false}
+    right={
+        <TextInput.Icon 
+            icon="calendar" 
+            onPress={() => {
+                console.log('Calendar icon pressed');
+                setShowDatePicker(true);
+            }} 
+        />
+    }
+/>
                                     {touched.preferredTime && errors.preferredTime && (
                                         <Text variant="bodyMedium" style={[styles.error, { color: theme.colors.error }]}>
                                             {errors.preferredTime}
@@ -479,41 +496,35 @@ export default function VisitEntryScreen() {
                                         />
                                     )}
 
-                                    <Menu
-                                        visible={menuVisible}
-                                        onDismiss={() => setMenuVisible(false)}
-                                        anchor={
-                                            <TextInput
-                                                label="Select Employee *"
-                                                value={selectedEmployee ? selectedEmployee.name : ''}
-                                                onFocus={() => setMenuVisible(true)}
-                                                error={touched.employeeId && errors.employeeId}
-                                                style={styles.input}
-                                                mode="outlined"
-                                                editable={false}
-                                                right={<TextInput.Icon icon="menu-down" />}
-                                            />
-                                        }
-                                    >
-                                        {employees.length > 0 ? (
-                                            employees.map((employee) => (
-                                                <Menu.Item
-                                                    key={employee?.id || Math.random()}
-                                                    onPress={() => {
-                                                        setSelectedEmployee(employee);
-                                                        setFieldValue('employeeId', employee.id);
-                                                        setMenuVisible(false);
-                                                    }}
-                                                    title={`${employee?.name || 'Unknown'} (${employee?.role || 'Unknown'})`}
-                                                />
-                                            ))
-                                        ) : (
-                                            <Menu.Item
-                                                title="No employees available"
-                                                disabled
-                                            />
-                                        )}
-                                    </Menu>
+                                    <TouchableOpacity
+    onPress={() => {
+        const employeeOptions = employees.map((emp, index) => ({
+            text: `${emp.name} (${emp.role})`,
+            onPress: () => {
+                setSelectedEmployee(emp);
+                setFieldValue('employeeId', emp.id);
+            }
+        }));
+        
+        const options = [
+            ...employeeOptions,
+            { text: 'Cancel', style: 'cancel' }
+        ];
+
+        Alert.alert('Select Employee', '', options);
+    }}
+>
+    <TextInput
+        label="Select Employee *"
+        value={selectedEmployee ? selectedEmployee.name : ''}
+        error={touched.employeeId && errors.employeeId}
+        style={styles.input}
+        mode="outlined"
+        editable={false}
+        right={<TextInput.Icon icon="menu-down" />}
+        pointerEvents="none"
+    />
+</TouchableOpacity>
                                     {touched.employeeId && errors.employeeId && (
                                         <Text variant="bodyMedium" style={[styles.error, { color: theme.colors.error }]}>
                                             {errors.employeeId}

@@ -80,6 +80,14 @@ export default function CreateOrganizationScreen() {
       formData.append('address', values.address);
       formData.append('phone', values.phone);
       formData.append('email', values.email);
+      console.log('Form Data:', {
+        name: values.name,  
+        description: values.description,
+        address: values.address,
+        phone: values.phone,
+        email: values.email,
+        logo,
+      });
       
       // Add logo if selected
       if (logo) {
